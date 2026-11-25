@@ -4,6 +4,14 @@
 
 ---
 
+## 🌐 線上展示與系統入口 (GitHub Pages)
+
+🔗 **系統線上網址**：[https://yaoshuchin.github.io/1151125-nantou-exam-roster/](https://yaoshuchin.github.io/1151125-nantou-exam-roster/)
+
+> 🔑 **登入密碼**：`nato`（不分大小寫）
+
+---
+
 ## 🔐 系統存取密碼
 
 為保護校內評量排程資訊，本系統設有安全驗證防護：
@@ -70,6 +78,7 @@
 ├── data.js                              # 結構化資料庫 (輪值表、進度表、排程分析、教師清單)
 ├── 115南投國中各科評量教師輪值表.xlsx     # 官方 Excel 活頁簿 (含整合表、命題表、審校表、個人清單)
 ├── 115南投國中各科評量教師輪值表.pdf      # 原始 PDF 掃描檔
+├── images/                              # 原始手稿掃描高解析度圖片 (page_1 ~ page_8)
 ├── build_data.js                        # 資料組裝建置程式碼
 ├── generate_excel.js                    # Excel 活頁簿產製程式碼
 └── README.md                            # 專案詳細說明文件
