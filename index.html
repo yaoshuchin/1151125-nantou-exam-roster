@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>南投國中 115學年度第1學期 各科評量教師輪值與教學進度查詢系統</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .badge-setter {
+      background-color: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #BFDBFE;
+    }
+    .badge-reviewer {
+      background-color: #ECFDF5;
+      color: #047857;
+      border: 1px solid #A7F3D0;
+    }
+    .badge-makeup {
+      background-color: #FFFBEB;
+      color: #B45309;
+      border: 1px solid #FDE68A;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- ================= PASSWORD AUTH MODAL ================= -->
+  <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity duration-300">
+    <div id="authCard" class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-slate-100 text-center relative overflow-hidden">
+      <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+      <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+      
+      <div class="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-indigo-400 text-white rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-200 text-2xl">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      
+      <h2 class="text-2xl font-bold text-slate-800 mb-1">南投國中評量系統</h2>
+      <p class="text-xs text-indigo-600 font-semibold tracking-wider uppercase mb-4">115學年度第1學期 教師輪值與進度</p>
+      <p class="text-sm text-slate-500 mb-6">本系統包含校內評量機密排程，請輸入存取驗證碼以進入瀏覽。</p>
+      
+      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div class="relative">
+          <input 
+            type="password" 
+            id="passwordInput" 
+            placeholder="請輸入密碼 (預設: nato)" 
+            autocomplete="current-password"
+            class="w-full px-4 py-3 pl-11 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-800 transition text-sm bg-slate-50"
+            required
+          />
+          <i class="fa-solid fa-key absolute left-4 top-3.5 text-slate-400"></i>
+          <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600">
+            <i id="eyeIcon" class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+        
+        <div id="authError" class="text-xs text-red-500 hidden font-medium flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-circle-exclamation"></i> 密碼錯誤，請重新輸入！
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-medium rounded-xl shadow-md shadow-indigo-200 transition transform active:scale-[0.99] flex items-center justify-center gap-2 text-sm"
+        >
+          <span>驗證並進入系統</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+      
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+        <span><i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> 校內權限控管</span>
+        <span>預設密碼: <code class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">nato</code></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN APP HEADER ================= -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-100 text-lg">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">南投國中 115學年度各科評量教師輪值表</h1>
+              <span class="hidden md:inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                第 1 學期
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 hidden sm:block">命題一覽表 • 審校一覽表 • 21週教學進度表 • 個人輪值檢索</p>
+          </div>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="flex items-center gap-2">
+          <!-- Download Excel -->
+          <a href="115南投國中各科評量教師輪值表.xlsx" download class="p-2 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition" title="下載官方 Excel 試算表 (.xlsx)">
+            <i class="fa-solid fa-file-excel text-emerald-600"></i>
+          </a>
+
+          <!-- Download PDF -->
+          <a href="115南投國中各科評量教師輪值表.pdf" download class="p-2 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="下載原始掃描 PDF 檔">
+            <i class="fa-solid fa-file-pdf text-rose-600"></i>
+          </a>
+
+          <!-- Print / Export -->
+          <button onclick="window.print()" class="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition" title="列印或另存PDF">
+            <i class="fa-solid fa-print"></i>
+          </button>
+          
+          <button onclick="exportCSV()" class="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition" title="匯出輪值表 CSV">
+            <i class="fa-solid fa-file-csv"></i>
+          </button>
+
+          <!-- Re-lock Button -->
+          <button onclick="handleLogout()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-slate-200 transition" title="鎖定系統">
+            <i class="fa-solid fa-lock text-slate-400 group-hover:text-red-500"></i>
+            <span class="hidden sm:inline">鎖定系統</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= SUB-HEADER / GLOBAL SEARCH BAR ================= -->
+  <div class="bg-gradient-to-b from-indigo-900 to-indigo-800 text-white pt-8 pb-10 px-4 sm:px-6 shadow-inner">
+    <div class="max-w-7xl mx-auto">
+      <div class="max-w-3xl mx-auto text-center mb-6">
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">全校評量輪值與教學進度即時檢索</h2>
+        <p class="text-indigo-200 text-xs sm:text-sm">支援搜尋教師姓名、科目、年級、段考週次與任務角色</p>
+      </div>
+
+      <!-- Search Input Container -->
+      <div class="max-w-2xl mx-auto relative">
+        <div class="relative flex items-center">
+          <input 
+            type="text" 
+            id="globalSearch" 
+            oninput="handleGlobalSearch(this.value)" 
+            placeholder="請輸入教師姓名 (如: 藍承莉、李協融) 或科目 (如: 數學、公民)..." 
+            class="w-full pl-12 pr-12 py-3.5 bg-white text-slate-800 rounded-2xl shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-300 text-sm font-medium placeholder-slate-400"
+          />
+          <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400 text-base"></i>
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-4 text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Quick Search Tags -->
+        <div class="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs">
+          <span class="text-indigo-300">熱門教師檢索:</span>
+          <button onclick="setSearchFilter('李協融')" class="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition">李協融</button>
+          <button onclick="setSearchFilter('藍承莉')" class="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition">藍承莉</button>
+          <button onclick="setSearchFilter('孫雅惠')" class="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition">孫雅惠</button>
+          <button onclick="setSearchFilter('林曉雯')" class="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition">林曉雯</button>
+          <button onclick="setSearchFilter('簡雨緹')" class="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition">簡雨緹</button>
+          <button onclick="setSearchFilter('林志恩')" class="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition">林志恩</button>
+          <button onclick="setSearchFilter('國文')" class="px-2 py-0.5 rounded-full bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-100 transition">國文</button>
+          <button onclick="setSearchFilter('數學')" class="px-2 py-0.5 rounded-full bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-100 transition">數學</button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-4xl mx-auto mt-8">
+        <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 text-center">
+          <div class="text-xs text-indigo-200 mb-0.5">參與教師</div>
+          <div class="text-xl sm:text-2xl font-bold text-white">48 <span class="text-xs font-normal">位</span></div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 text-center">
+          <div class="text-xs text-indigo-200 mb-0.5">評量學科組</div>
+          <div class="text-xl sm:text-2xl font-bold text-white">21 <span class="text-xs font-normal">科次</span></div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 text-center">
+          <div class="text-xs text-indigo-200 mb-0.5">總輪值任務</div>
+          <div class="text-xl sm:text-2xl font-bold text-white">147 <span class="text-xs font-normal">人次</span></div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 text-center">
+          <div class="text-xs text-indigo-200 mb-0.5">三次段考週次</div>
+          <div class="text-xs sm:text-sm font-semibold text-emerald-300">W7 • W14 • W21</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NAVIGATION TABS ================= -->
+  <div class="bg-white border-b border-slate-200 sticky top-16 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav class="flex space-x-1 sm:space-x-4 overflow-x-auto py-2 custom-scrollbar" id="navTabs">
+        <button onclick="switchTab('roster')" id="tab-btn-roster" class="tab-btn active px-3 py-2 text-sm font-medium rounded-lg transition whitespace-nowrap flex items-center gap-2 bg-indigo-50 text-indigo-700">
+          <i class="fa-solid fa-table-list"></i>
+          <span>各科評量輪值總表</span>
+        </button>
+        <button onclick="switchTab('teachers')" id="tab-btn-teachers" class="tab-btn px-3 py-2 text-sm font-medium rounded-lg transition whitespace-nowrap flex items-center gap-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+          <i class="fa-solid fa-user-tie"></i>
+          <span>教師個人輪值檢索</span>
+          <span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700 font-semibold" id="teacherCountBadge">48</span>
+        </button>
+        <button onclick="switchTab('schedule')" id="tab-btn-schedule" class="tab-btn px-3 py-2 text-sm font-medium rounded-lg transition whitespace-nowrap flex items-center gap-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>21週教學預定進度表</span>
+        </button>
+        <button onclick="switchTab('audit')" id="tab-btn-audit" class="tab-btn px-3 py-2 text-sm font-medium rounded-lg transition whitespace-nowrap flex items-center gap-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+          <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+          <span>排程檢核與衝突分析</span>
+          <span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-semibold">警示</span>
+        </button>
+        <button onclick="switchTab('scans')" id="tab-btn-scans" class="tab-btn px-3 py-2 text-sm font-medium rounded-lg transition whitespace-nowrap flex items-center gap-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+          <i class="fa-solid fa-file-image text-slate-400"></i>
+          <span>原始手稿掃描 (8頁)</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ================= MAIN CONTENT CONTAINER ================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+
+    <!-- ================= TAB 1: 各科評量輪值總表 ================= -->
+    <section id="tab-roster" class="tab-content block space-y-6">
+      
+      <!-- Filter Controls Bar -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <!-- Grade & Subject Filters -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-semibold text-slate-500 mr-1"><i class="fa-solid fa-filter mr-1"></i>篩選:</span>
+          
+          <!-- Grade Filter -->
+          <div class="flex rounded-lg bg-slate-100 p-0.5 text-xs font-medium">
+            <button onclick="filterRosterGrade('ALL')" id="rGrade-ALL" class="r-grade-btn active px-2.5 py-1 rounded-md bg-white text-indigo-700 shadow-xs">全部年級</button>
+            <button onclick="filterRosterGrade('一年級')" id="rGrade-1" class="r-grade-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-indigo-600">一年級</button>
+            <button onclick="filterRosterGrade('二年級')" id="rGrade-2" class="r-grade-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-indigo-600">二年級</button>
+            <button onclick="filterRosterGrade('三年級')" id="rGrade-3" class="r-grade-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-indigo-600">三年級</button>
+          </div>
+
+          <!-- Subject Filter Dropdown -->
+          <select id="rSubjectSelect" onchange="filterRosterSubject(this.value)" class="text-xs font-medium bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500">
+            <option value="ALL">全部學科</option>
+            <option value="國文">國文</option>
+            <option value="英語">英語</option>
+            <option value="數學">數學</option>
+            <option value="自然">自然 / 理化</option>
+            <option value="歷史">歷史</option>
+            <option value="地理">地理</option>
+            <option value="公民">公民</option>
+          </select>
+        </div>
+
+        <!-- View Mode Switch: 整合 / 命題 / 審校 -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">檢視模式:</span>
+          <div class="flex rounded-lg bg-slate-100 p-0.5 text-xs font-medium">
+            <button onclick="setRosterView('unified')" id="viewBtn-unified" class="view-mode-btn active px-2.5 py-1 rounded-md bg-white text-indigo-700 shadow-xs">整合總表</button>
+            <button onclick="setRosterView('setter')" id="viewBtn-setter" class="view-mode-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-indigo-600">命題一覽</button>
+            <button onclick="setRosterView('reviewer')" id="viewBtn-reviewer" class="view-mode-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-indigo-600">審校一覽</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div class="flex items-center gap-2">
+            <h3 class="font-bold text-slate-800 text-base" id="rosterTableTitle">南投國中 115學年度第1學期 各科評量命題與審校輪值整合表</h3>
+            <span class="text-xs text-slate-400" id="rosterFilteredCount">共 21 科次</span>
+          </div>
+          <div class="text-xs text-slate-500 hidden sm:flex items-center gap-3">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> 命題教師</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 審校教師</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 補考命題</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse text-sm" id="rosterTable">
+            <thead class="bg-slate-100/70 text-slate-600 text-xs uppercase font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4 w-24">科目</th>
+                <th class="py-3 px-3 w-20 text-center">年級</th>
+                <th class="py-3 px-4 min-w-[200px]">第一次段考 <span class="text-[10px] text-slate-400 font-normal">(10/11~10/17)</span></th>
+                <th class="py-3 px-4 min-w-[200px]">第二次段考 <span class="text-[10px] text-slate-400 font-normal">(11/29~12/5)</span></th>
+                <th class="py-3 px-4 min-w-[200px]">第三次段考 <span class="text-[10px] text-slate-400 font-normal">(1/17~1/23)</span></th>
+                <th class="py-3 px-4 w-32">補考命題</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="rosterTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 flex items-center justify-between">
+        <span><i class="fa-solid fa-circle-info mr-1"></i> 提示：點擊任何教師姓名即可直接查詢該教師三次段考之完整輪值卡片。</span>
+        <span>資料來源：南投國中 115學年度第1學期各科評量教師輪值表 (第7~8頁)</span>
+      </div>
+    </section>
+
+    <!-- ================= TAB 2: 教師個人輪值檢索 ================= -->
+    <section id="tab-teachers" class="tab-content hidden space-y-6">
+      
+      <!-- Top controls & Teacher search -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="relative w-64">
+            <input 
+              type="text" 
+              id="teacherFilterInput" 
+              oninput="filterTeacherCards(this.value)" 
+              placeholder="搜尋特定教師姓名..." 
+              class="w-full pl-9 pr-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            />
+            <i class="fa-solid fa-user absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          </div>
+          <span class="text-xs text-slate-500" id="teacherDisplayCount">顯示 48 位教師</span>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-slate-400">排序:</span>
+          <button onclick="sortTeachers('duties')" id="sort-duties" class="t-sort-btn active px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 font-medium">依任務總數</button>
+          <button onclick="sortTeachers('name')" id="sort-name" class="t-sort-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-indigo-600 font-medium">依姓名筆劃</button>
+        </div>
+      </div>
+
+      <!-- Teacher Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="teacherGrid">
+        <!-- Dynamically populated -->
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: 21週教學預定進度表 ================= -->
+    <section id="tab-schedule" class="tab-content hidden space-y-6">
+      
+      <!-- Schedule Filter Toolbar -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Grade Select -->
+          <div class="flex rounded-lg bg-slate-100 p-0.5 text-xs font-medium">
+            <button onclick="setScheduleGrade('g1')" id="schedGrade-g1" class="s-grade-btn active px-3 py-1.5 rounded-md bg-white text-indigo-700 shadow-xs">一年級</button>
+            <button onclick="setScheduleGrade('g2')" id="schedGrade-g2" class="s-grade-btn px-3 py-1.5 rounded-md text-slate-600 hover:text-indigo-600">二年級</button>
+            <button onclick="setScheduleGrade('g3')" id="schedGrade-g3" class="s-grade-btn px-3 py-1.5 rounded-md text-slate-600 hover:text-indigo-600">三年級</button>
+          </div>
+
+          <!-- Category Select: 學科 / 藝能科 -->
+          <div class="flex rounded-lg bg-slate-100 p-0.5 text-xs font-medium">
+            <button onclick="setScheduleCategory('academic')" id="schedCat-academic" class="s-cat-btn active px-3 py-1.5 rounded-md bg-white text-indigo-700 shadow-xs">主要學科 (8科)</button>
+            <button onclick="setScheduleCategory('arts')" id="schedCat-arts" class="s-cat-btn px-3 py-1.5 rounded-md text-slate-600 hover:text-indigo-600">藝能與非考科 (9科)</button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input 
+            type="text" 
+            id="scheduleKeyword" 
+            oninput="renderScheduleTable()" 
+            placeholder="過濾進度文字 (例: 複習、評量)..." 
+            class="pl-3 pr-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none w-48"
+          />
+        </div>
+      </div>
+
+      <!-- Schedule Table Display -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div class="flex items-center gap-2">
+            <h3 class="font-bold text-slate-800 text-base" id="scheduleTableTitle">一年級各科教學預定進度表 (主要學科)</h3>
+            <span class="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200 font-medium">全學期共 21 週</span>
+          </div>
+          <div class="text-xs text-slate-400">
+            標示 <span class="bg-amber-100 text-amber-800 font-semibold px-1.5 py-0.5 rounded">評量週次</span> 包含第 7、14、21 週
+          </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse text-xs" id="scheduleTable">
+            <thead class="bg-slate-100/70 text-slate-600 uppercase font-semibold border-b border-slate-200" id="scheduleHead">
+              <!-- Dynamically populated -->
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="scheduleBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: 排程檢核與衝突分析 ================= -->
+    <section id="tab-audit" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 text-2xl flex-shrink-0">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">評量排程檢核與衝突分析報告</h3>
+            <p class="text-xs text-slate-500">針對 115學年度第1學期各科評量命題與審校輪值表進行交叉勾稽與智慧分析，提供教學行政參考調整。</p>
+          </div>
+        </div>
+
+        <!-- Audit Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+          <div class="p-4 rounded-xl bg-amber-50/50 border border-amber-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold text-amber-800">自命自審衝突</span>
+              <span class="px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full text-[11px] font-bold">3 案</span>
+            </div>
+            <p class="text-xs text-slate-600">同一評量中，出題教師與審校教師為同一人，缺少雙重把關機制。</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-blue-50/50 border border-blue-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold text-blue-800">單次評量高負擔</span>
+              <span class="px-2 py-0.5 bg-blue-200 text-blue-900 rounded-full text-[11px] font-bold">2 案</span>
+            </div>
+            <p class="text-xs text-slate-600">單次段考中個人同時承擔 3~4 項命題與審校任務（如李協融、藍承莉）。</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-purple-50/50 border border-purple-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold text-purple-800">跨科跨領域兼任</span>
+              <span class="px-2 py-0.5 bg-purple-200 text-purple-900 rounded-full text-[11px] font-bold">1 案</span>
+            </div>
+            <p class="text-xs text-slate-600">兼跨國文科與公民科出題與審校（簡雨緹老師）。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conflicts Detailed List -->
+      <div class="space-y-4" id="conflictsList">
+        <!-- Dynamically populated from APP_DATA.conflicts -->
+      </div>
+
+      <!-- Top Duty Burden Ranking Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-ranking-star text-indigo-500"></i>
+          教師評量任務負擔排行 Top 10
+        </h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">排名</th>
+                <th class="py-2.5 px-3">教師姓名</th>
+                <th class="py-2.5 px-3">命題次數</th>
+                <th class="py-2.5 px-3">審校次數</th>
+                <th class="py-2.5 px-3">補考命題</th>
+                <th class="py-2.5 px-3">任務總量</th>
+                <th class="py-2.5 px-3">負荷評估</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="topTeachersBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= TAB 5: 原始手稿掃描 ================= -->
+    <section id="tab-scans" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">原始掃描表冊檔案 (共 8 頁)</h3>
+            <p class="text-xs text-slate-500">提供與紙本公文/手稿輪值表對照之高解析度圖像檢視，點擊圖片可放大或另開視窗瀏覽。</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="115南投國中各科評量教師輪值表.pdf" target="_blank" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium rounded-lg text-xs transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-pdf"></i> 開啟原始 PDF
+            </a>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- 8 Pages Preview -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition">
+            <div class="bg-slate-100 p-2 text-xs font-bold text-slate-700 flex justify-between">
+              <span>第 1 頁：三年級藝能科進度</span>
+              <a href="images/page_1.jpg" target="_blank" class="text-indigo-600 hover:underline">大圖</a>
+            </div>
+            <img src="images/page_1.jpg" alt="第 1 頁" class="w-full h-48 object-cover cursor-pointer hover:opacity-90" onclick="window.open('images/page_1.jpg', '_blank')">
+          </div>
+          <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition">
+            <div class="bg-slate-100 p-2 text-xs font-bold text-slate-700 flex justify-between">
+              <span>第 2 頁：三年級主要學科進度</span>
+              <a href="images/page_2.jpg" target="_blank" class="text-indigo-600 hover:underline">大圖</a>
+            </div>
+            <img src="images/page_2.jpg" alt="第 2 頁" class="w-full h-48 object-cover cursor-pointer hover:opacity-90" onclick="window.open('images/page_2.jpg', '_blank')">
+          </div>
+          <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition">
+            <div class="bg-slate-100 p-2 text-xs font-bold text-slate-700 flex justify-between">
+              <span>第 3 頁：二年級藝能科進度</span>
+              <a href="images/page_3.jpg" target="_blank" class="text-indigo-600 hover:underline">大圖</a>
+            </div>
+            <img src="images/page_3.jpg" alt="第 3 頁" class="w-full h-48 object-cover cursor-pointer hover:opacity-90" onclick="window.open('images/page_3.jpg', '_blank')">
+          </div>
+          <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition">
+            <div class="bg-slate-100 p-2 text-xs font-bold text-slate-700 flex justify-between">
+              <span>第 4 頁：二年級主要學科進度</span>
+              <a href="images/page_4.jpg" target="_blank" class="text-indigo-600 hover:underline">大圖</a>
+            </div>
+            <img src="images/page_4.jpg" alt="第 4 頁" class="w-full h-48 object-cover cursor-pointer hover:opacity-90" onclick="window.open('images/page_4.jpg', '_blank')">
+          </div>
+          <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition">
+            <div class="bg-slate-100 p-2 text-xs font-bold text-slate-700 flex justify-between">
+              <span>第 5 頁：一年級主要學科進度</span>
+              <a href="images/page_5.jpg" target="_blank" class="text-indigo-600 hover:underline">大圖</a>
+            </div>
+            <img src="images/page_5.jpg" alt="第 5 頁" class="w-full h-48 object-cover cursor-pointer hover:opacity-90" onclick="window.open('images/page_5.jpg', '_blank')">
+          </div>
+          <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition">
+            <div class="bg-slate-100 p-2 text-xs font-bold text-slate-700 flex justify-between">
+              <span>第 6 頁：一年級藝能科進度</span>
+              <a href="images/page_6.jpg" target="_blank" class="text-indigo-600 hover:underline">大圖</a>
+            </div>
+            <img src="images/page_6.jpg" alt="第 6 頁" class="w-full h-48 object-cover cursor-pointer hover:opacity-90" onclick="window.open('images/page_6.jpg', '_blank')">
+          </div>
+          <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition ring-2 ring-emerald-500">
+            <div class="bg-emerald-50 p-2 text-xs font-bold text-emerald-800 flex justify-between">
+              <span>第 7 頁：各科試卷審校教師表</span>
+              <a href="images/page_7.jpg" target="_blank" class="text-emerald-700 hover:underline">大圖</a>
+            </div>
+            <img src="images/page_7.jpg" alt="第 7 頁" class="w-full h-48 object-cover cursor-pointer hover:opacity-90" onclick="window.open('images/page_7.jpg', '_blank')">
+          </div>
+          <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition ring-2 ring-indigo-500">
+            <div class="bg-indigo-50 p-2 text-xs font-bold text-indigo-800 flex justify-between">
+              <span>第 8 頁：各科評量命題教師表</span>
+              <a href="images/page_8.jpg" target="_blank" class="text-indigo-700 hover:underline">大圖</a>
+            </div>
+            <img src="images/page_8.jpg" alt="第 8 頁" class="w-full h-48 object-cover cursor-pointer hover:opacity-90" onclick="window.open('images/page_8.jpg', '_blank')">
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 space-y-2">
+      <p class="font-medium text-slate-700">南投縣立南投國民中學 115學年度第1學期各科評量教師輪值與教學預定進度系統</p>
+      <p class="text-[11px] text-slate-400">依據校內教務處最新各科評量輪值檔案編製 • 系統安全存取控制保護</p>
+    </div>
+  </footer>
+
+  <!-- ================= TEACHER DETAIL MODAL ================= -->
+  <div id="teacherModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full mx-4 border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 text-xl font-bold" id="modalTeacherAvatar">
+            林
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-800" id="modalTeacherName">教師姓名</h3>
+            <span class="text-xs text-slate-500" id="modalTeacherSummary">南投國中評量輪值教師</span>
+          </div>
+        </div>
+        <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-slate-600 p-2">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4" id="modalDutyContent">
+        <!-- Duties timeline dynamically inserted -->
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+        <button onclick="closeTeacherModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-xs transition">
+          關閉
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Data File -->
+  <script src="data.js"></script>
+
+  <!-- ================= CLIENT LOGIC SCRIPT ================= -->
+  <script>
+    // System Password
+    const SYSTEM_PASSWORD = "nato";
+    const AUTH_KEY = "nantou_exam_system_auth";
+
+    // Application State
+    let currentGrade = "ALL";
+    let currentSubject = "ALL";
+    let currentViewMode = "unified"; // 'unified', 'setter', 'reviewer'
+    let currentSchedGrade = "g1";
+    let currentSchedCat = "academic";
+    let currentTeacherSort = "duties";
+
+    // Initialization
+    document.addEventListener("DOMContentLoaded", () => {
+      checkAuthentication();
+      renderRosterTable();
+      renderTeacherGrid();
+      renderScheduleTable();
+      renderAuditSection();
+    });
+
+    // ---------------- AUTHENTICATION ----------------
+    function checkAuthentication() {
+      const isAuth = sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY);
+      const modal = document.getElementById("authModal");
+      if (isAuth === "true") {
+        modal.classList.add("hidden");
+      } else {
+        modal.classList.remove("hidden");
+        document.getElementById("passwordInput").focus();
+      }
+    }
+
+    function handleAuthSubmit(event) {
+      event.preventDefault();
+      const input = document.getElementById("passwordInput");
+      const error = document.getElementById("authError");
+      const card = document.getElementById("authCard");
+      
+      const pwd = input.value.trim().toLowerCase();
+      if (pwd === SYSTEM_PASSWORD) {
+        sessionStorage.setItem(AUTH_KEY, "true");
+        localStorage.setItem(AUTH_KEY, "true");
+        error.classList.add("hidden");
+        
+        // Smooth unlock transition
+        const modal = document.getElementById("authModal");
+        modal.classList.add("opacity-0");
+        setTimeout(() => {
+          modal.classList.add("hidden");
+          modal.classList.remove("opacity-0");
+        }, 300);
+      } else {
+        error.classList.remove("hidden");
+        card.classList.remove("shake");
+        void card.offsetWidth; // trigger reflow
+        card.classList.add("shake");
+        input.value = "";
+        input.focus();
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById("passwordInput");
+      const icon = document.getElementById("eyeIcon");
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+      } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+      }
+    }
+
+    function handleLogout() {
+      if (confirm("確定要鎖定系統並重新要求密碼驗證嗎？")) {
+        sessionStorage.removeItem(AUTH_KEY);
+        localStorage.removeItem(AUTH_KEY);
+        location.reload();
+      }
+    }
+
+    // ---------------- TAB NAVIGATION ----------------
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("bg-indigo-50", "text-indigo-700");
+        btn.classList.add("text-slate-600");
+      });
+
+      const target = document.getElementById(`tab-${tabId}`);
+      const targetBtn = document.getElementById(`tab-btn-${tabId}`);
+      if (target) target.classList.remove("hidden");
+      if (targetBtn) {
+        targetBtn.classList.remove("text-slate-600");
+        targetBtn.classList.add("bg-indigo-50", "text-indigo-700");
+      }
+    }
+
+    // ---------------- ROSTER TABLE RENDERING ----------------
+    function renderRosterTable(searchKeyword = "") {
+      const tbody = document.getElementById("rosterTableBody");
+      const list = window.APP_DATA.examDuties;
+      
+      const kw = searchKeyword.trim().toLowerCase();
+      
+      const filtered = list.filter(row => {
+        // Grade filter
+        if (currentGrade !== "ALL" && row.grade !== currentGrade) return false;
+        // Subject filter
+        if (currentSubject !== "ALL") {
+          if (currentSubject === "自然") {
+            if (row.subject !== "自然" && row.subject !== "理化") return false;
+          } else if (row.subject !== currentSubject) {
+            return false;
+          }
+        }
+        // Keyword filter
+        if (kw) {
+          const matchStr = `${row.subject} ${row.grade} ${row.exam1_setter} ${row.exam1_reviewer} ${row.exam2_setter} ${row.exam2_reviewer} ${row.exam3_setter} ${row.exam3_reviewer} ${row.makeup_setter}`.toLowerCase();
+          if (!matchStr.includes(kw)) return false;
+        }
+        return true;
+      });
+
+      document.getElementById("rosterFilteredCount").textContent = `顯示 ${filtered.length} 科次 (共 21 科次)`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-12 text-slate-400">
+              <i class="fa-solid fa-inbox text-3xl mb-2 block"></i>
+              查無符合條件的評量排程
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(row => {
+        return `
+          <tr class="hover:bg-indigo-50/30 transition">
+            <td class="py-3 px-4 font-bold text-slate-800 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full ${getSubjectColor(row.subject)}"></span>
+              ${row.subject}
+            </td>
+            <td class="py-3 px-3 text-center">
+              <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">${row.grade}</span>
+            </td>
+            <td class="py-3 px-4">
+              ${renderDutyCell(row.exam1_setter, row.exam1_reviewer, currentViewMode)}
+            </td>
+            <td class="py-3 px-4">
+              ${renderDutyCell(row.exam2_setter, row.exam2_reviewer, currentViewMode)}
+            </td>
+            <td class="py-3 px-4">
+              ${renderDutyCell(row.exam3_setter, row.exam3_reviewer, currentViewMode)}
+            </td>
+            <td class="py-3 px-4">
+              ${renderTeacherBadge(row.makeup_setter, 'makeup')}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderDutyCell(setter, reviewer, viewMode) {
+      if (viewMode === 'setter') {
+        return renderTeacherBadge(setter, 'setter');
+      } else if (viewMode === 'reviewer') {
+        return renderTeacherBadge(reviewer, 'reviewer');
+      } else {
+        // Unified view
+        return `
+          <div class="flex flex-col gap-1.5 sm:flex-row sm:items-center">
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] text-slate-400 font-medium w-7">命題:</span>
+              ${renderTeacherBadge(setter, 'setter')}
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] text-slate-400 font-medium w-7">審校:</span>
+              ${renderTeacherBadge(reviewer, 'reviewer')}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function renderTeacherBadge(rawName, role) {
+      if (!rawName) return `<span class="text-xs text-slate-300">--</span>`;
+      const isComp = rawName.includes('作文');
+      const name = rawName.replace(/\(作文\)/g, '').trim();
+
+      let badgeClass = "badge-setter";
+      let icon = "fa-pen-to-square";
+      if (role === 'reviewer') {
+        badgeClass = "badge-reviewer";
+        icon = "fa-circle-check";
+      } else if (role === 'makeup') {
+        badgeClass = "badge-makeup";
+        icon = "fa-clock-rotate-left";
+      }
+
+      return `
+        <button 
+          onclick="openTeacherModalByName('${name}')" 
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold ${badgeClass} hover:opacity-80 transition cursor-pointer"
+          title="點擊查看 ${name} 老師的個人職責"
+        >
+          <i class="fa-solid ${icon} text-[10px]"></i>
+          <span>${name}</span>
+          ${isComp ? `<span class="ml-0.5 px-1 py-0.2 rounded text-[9px] bg-purple-100 text-purple-700 font-bold border border-purple-200">作文</span>` : ''}
+        </button>
+      `;
+    }
+
+    function getSubjectColor(subj) {
+      switch(subj) {
+        case '國文': return 'bg-rose-500';
+        case '英語': return 'bg-blue-500';
+        case '數學': return 'bg-amber-500';
+        case '自然':
+        case '理化': return 'bg-emerald-500';
+        case '歷史': return 'bg-red-500';
+        case '地理': return 'bg-cyan-500';
+        case '公民': return 'bg-indigo-500';
+        default: return 'bg-slate-400';
+      }
+    }
+
+    function filterRosterGrade(grade) {
+      currentGrade = grade;
+      document.querySelectorAll(".r-grade-btn").forEach(btn => {
+        btn.classList.remove("active", "bg-white", "text-indigo-700", "shadow-xs");
+        btn.classList.add("text-slate-600");
+      });
+      const activeBtn = grade === 'ALL' ? document.getElementById("rGrade-ALL") :
+                        grade === '一年級' ? document.getElementById("rGrade-1") :
+                        grade === '二年級' ? document.getElementById("rGrade-2") : document.getElementById("rGrade-3");
+      if (activeBtn) {
+        activeBtn.classList.remove("text-slate-600");
+        activeBtn.classList.add("active", "bg-white", "text-indigo-700", "shadow-xs");
+      }
+      renderRosterTable(document.getElementById("globalSearch").value);
+    }
+
+    function filterRosterSubject(subj) {
+      currentSubject = subj;
+      renderRosterTable(document.getElementById("globalSearch").value);
+    }
+
+    function setRosterView(mode) {
+      currentViewMode = mode;
+      document.querySelectorAll(".view-mode-btn").forEach(btn => {
+        btn.classList.remove("active", "bg-white", "text-indigo-700", "shadow-xs");
+        btn.classList.add("text-slate-600");
+      });
+      const target = document.getElementById(`viewBtn-${mode}`);
+      if (target) {
+        target.classList.remove("text-slate-600");
+        target.classList.add("active", "bg-white", "text-indigo-700", "shadow-xs");
+      }
+
+      // Update table title
+      const titleEl = document.getElementById("rosterTableTitle");
+      if (mode === 'setter') titleEl.textContent = "南投國中 115學年度第1學期 各科評量命題教師一覽表";
+      else if (mode === 'reviewer') titleEl.textContent = "南投國中 115學年度第1學期 各科評量試卷審校教師一覽表";
+      else titleEl.textContent = "南投國中 115學年度第1學期 各科評量命題與審校輪值整合表";
+
+      renderRosterTable(document.getElementById("globalSearch").value);
+    }
+
+    // ---------------- TEACHER CARDS RENDERING ----------------
+    function renderTeacherGrid(filterText = "") {
+      const container = document.getElementById("teacherGrid");
+      let list = [...window.APP_DATA.teachers];
+
+      if (currentTeacherSort === 'name') {
+        list.sort((a,b) => a.name.localeCompare(b.name, 'zh-TW'));
+      } else {
+        list.sort((a,b) => b.total - a.total || a.name.localeCompare(b.name, 'zh-TW'));
+      }
+
+      const kw = filterText.trim().toLowerCase();
+      if (kw) {
+        list = list.filter(t => t.name.toLowerCase().includes(kw));
+      }
+
+      document.getElementById("teacherDisplayCount").textContent = `顯示 ${list.length} 位教師 (共 48 位)`;
+
+      container.innerHTML = list.map(t => {
+        const hasWarning = t.total >= 7;
+        return `
+          <div class="bg-white rounded-xl p-4 border border-slate-200 hover:border-indigo-300 hover:shadow-md transition cursor-pointer" onclick="openTeacherModalByName('${t.name}')">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center border border-indigo-100 text-sm">
+                  ${t.name.substring(0, 1)}
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                    ${t.name}
+                    ${hasWarning ? `<span class="px-1.5 py-0.2 rounded text-[10px] bg-red-100 text-red-700 font-bold">高負荷</span>` : ''}
+                  </h4>
+                  <p class="text-[11px] text-slate-400">總計 ${t.total} 項排程任務</p>
+                </div>
+              </div>
+              <span class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded-lg">
+                ${t.total} 次
+              </span>
+            </div>
+
+            <!-- Mini duty breakdown pill -->
+            <div class="grid grid-cols-3 gap-1.5 text-center text-[11px] bg-slate-50 p-2 rounded-lg">
+              <div>
+                <span class="text-slate-400 block text-[10px]">命題</span>
+                <span class="font-bold text-blue-600">${t.setterCount}</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[10px]">審校</span>
+                <span class="font-bold text-emerald-600">${t.reviewerCount}</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[10px]">補考</span>
+                <span class="font-bold text-amber-600">${t.makeupCount}</span>
+              </div>
+            </div>
+
+            <!-- Duty tags preview -->
+            <div class="mt-3 flex flex-wrap gap-1">
+              ${t.duties.slice(0, 3).map(d => `
+                <span class="px-1.5 py-0.5 rounded text-[10px] ${d.role === '命題' ? 'bg-blue-50 text-blue-700' : d.role === '審校' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">
+                  ${d.exam} ${d.subject}${d.grade} (${d.role})
+                </span>
+              `).join('')}
+              ${t.duties.length > 3 ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-500 font-semibold">+${t.duties.length - 3}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterTeacherCards(val) {
+      renderTeacherGrid(val);
+    }
+
+    function sortTeachers(mode) {
+      currentTeacherSort = mode;
+      document.querySelectorAll(".t-sort-btn").forEach(btn => {
+        btn.classList.remove("active", "bg-indigo-50", "text-indigo-700");
+        btn.classList.add("text-slate-600");
+      });
+      const target = document.getElementById(`sort-${mode}`);
+      if (target) {
+        target.classList.remove("text-slate-600");
+        target.classList.add("active", "bg-indigo-50", "text-indigo-700");
+      }
+      renderTeacherGrid(document.getElementById("teacherFilterInput").value);
+    }
+
+    // ---------------- TEACHER MODAL ----------------
+    function openTeacherModalByName(name) {
+      const teacher = window.APP_DATA.teachers.find(t => t.name === name);
+      if (!teacher) return;
+
+      document.getElementById("modalTeacherAvatar").textContent = name.substring(0, 1);
+      document.getElementById("modalTeacherName").textContent = `${name} 老師`;
+      document.getElementById("modalTeacherSummary").textContent = `總計承擔 ${teacher.total} 項任務（命題 ${teacher.setterCount} 次、審校 ${teacher.reviewerCount} 次、補考 ${teacher.makeupCount} 次）`;
+
+      const content = document.getElementById("modalDutyContent");
+
+      content.innerHTML = `
+        <div class="space-y-3">
+          ${teacher.duties.map(d => `
+            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-md text-xs font-bold ${d.role === '命題' ? 'badge-setter' : d.role === '審校' ? 'badge-reviewer' : 'badge-makeup'}">
+                  ${d.role}
+                </span>
+                <span class="font-bold text-slate-800 text-sm">${d.subject} (${d.grade})</span>
+                ${d.isComposition ? `<span class="px-1.5 py-0.2 rounded text-[10px] bg-purple-100 text-purple-700 font-bold border border-purple-200">作文</span>` : ''}
+              </div>
+              <span class="text-xs text-slate-500 font-medium">${d.exam}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      document.getElementById("teacherModal").classList.remove("hidden");
+    }
+
+    function closeTeacherModal() {
+      document.getElementById("teacherModal").classList.add("hidden");
+    }
+
+    // ---------------- SCHEDULE TABLE RENDERING ----------------
+    function renderScheduleTable() {
+      const thead = document.getElementById("scheduleHead");
+      const tbody = document.getElementById("scheduleBody");
+      const schedData = window.APP_DATA.schedules[currentSchedGrade][currentSchedCat];
+      const weeks = window.APP_DATA.weeksInfo;
+      const kw = document.getElementById("scheduleKeyword").value.trim().toLowerCase();
+
+      // Define column headers according to grade & category
+      let cols = [];
+      if (currentSchedCat === 'academic') {
+        if (currentSchedGrade === 'g3') {
+          cols = [
+            { id: "chinese", label: "國文" },
+            { id: "english", label: "英語" },
+            { id: "math", label: "數學" },
+            { id: "science", label: "理化" },
+            { id: "earth", label: "地科" },
+            { id: "health", label: "健教" },
+            { id: "history", label: "歷史" },
+            { id: "geo", label: "地理" },
+            { id: "civics", label: "公民" }
+          ];
+        } else if (currentSchedGrade === 'g2') {
+          cols = [
+            { id: "chinese", label: "國文" },
+            { id: "english", label: "英語" },
+            { id: "math", label: "數學" },
+            { id: "science", label: "自然" },
+            { id: "health", label: "健教" },
+            { id: "history", label: "歷史" },
+            { id: "geo", label: "地理" },
+            { id: "civics", label: "公民" }
+          ];
+        } else {
+          cols = [
+            { id: "chinese", label: "國文" },
+            { id: "english", label: "英語" },
+            { id: "math", label: "數學" },
+            { id: "science", label: "生物" },
+            { id: "health", label: "健教" },
+            { id: "history", label: "歷史" },
+            { id: "geo", label: "地理" },
+            { id: "civics", label: "公民" }
+          ];
+        }
+      } else {
+        cols = [
+          { id: "pe", label: "體育" },
+          { id: "visual", label: "視藝" },
+          { id: "music", label: "音樂" },
+          { id: "perf", label: "表藝" },
+          { id: "scout", label: "童軍" },
+          { id: "home", label: "家政" },
+          { id: "guidance", label: "輔導" },
+          { id: "livingTech", label: "生活科技" },
+          { id: "it", label: "資訊科技" }
+        ];
+      }
+
+      // Render Head
+      thead.innerHTML = `
+        <tr>
+          <th class="py-2.5 px-3 w-16 text-center">週次</th>
+          <th class="py-2.5 px-3 w-28">日期區間</th>
+          ${cols.map(c => `<th class="py-2.5 px-3 text-slate-700">${c.label}</th>`).join('')}
+        </tr>
+      `;
+
+      // Render Rows
+      tbody.innerHTML = schedData.map((row, index) => {
+        const weekMeta = weeks[index];
+        const isExamWeek = weekMeta.isExam;
+        
+        // Check keyword filter
+        if (kw) {
+          const rowVals = cols.map(c => row[c.id] || "").join(" ").toLowerCase();
+          if (!rowVals.includes(kw) && !weekMeta.date.includes(kw) && !`第${row.week}週`.includes(kw)) {
+            return "";
+          }
+        }
+
+        return `
+          <tr class="${isExamWeek ? 'bg-amber-50/60 font-medium' : 'hover:bg-slate-50/70'} transition">
+            <td class="py-2 px-3 text-center">
+              ${isExamWeek ? `
+                <span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-500 text-white">
+                  W${row.week}
+                </span>
+              ` : `
+                <span class="text-slate-500 font-semibold">${row.week}</span>
+              `}
+            </td>
+            <td class="py-2 px-3 text-slate-600 font-mono text-[11px]">
+              ${weekMeta.date}
+              ${isExamWeek ? `<span class="block text-[10px] text-amber-700 font-semibold">${weekMeta.examName}</span>` : ''}
+            </td>
+            ${cols.map(c => {
+              const val = row[c.id] || "--";
+              const isExamCell = val.includes("評量") || val.includes("複習") || val.includes("段考") || val.includes("月考");
+              return `
+                <td class="py-2 px-3 ${isExamCell ? 'text-amber-800 font-bold' : 'text-slate-700'}">
+                  ${val}
+                </td>
+              `;
+            }).join('')}
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setScheduleGrade(grade) {
+      currentSchedGrade = grade;
+      document.querySelectorAll(".s-grade-btn").forEach(btn => {
+        btn.classList.remove("active", "bg-white", "text-indigo-700", "shadow-xs");
+        btn.classList.add("text-slate-600");
+      });
+      const target = document.getElementById(`schedGrade-${grade}`);
+      if (target) {
+        target.classList.remove("text-slate-600");
+        target.classList.add("active", "bg-white", "text-indigo-700", "shadow-xs");
+      }
+      updateScheduleTitle();
+      renderScheduleTable();
+    }
+
+    function setScheduleCategory(cat) {
+      currentSchedCat = cat;
+      document.querySelectorAll(".s-cat-btn").forEach(btn => {
+        btn.classList.remove("active", "bg-white", "text-indigo-700", "shadow-xs");
+        btn.classList.add("text-slate-600");
+      });
+      const target = document.getElementById(`schedCat-${cat}`);
+      if (target) {
+        target.classList.remove("text-slate-600");
+        target.classList.add("active", "bg-white", "text-indigo-700", "shadow-xs");
+      }
+      updateScheduleTitle();
+      renderScheduleTable();
+    }
+
+    function updateScheduleTitle() {
+      const gName = currentSchedGrade === 'g1' ? '一年級' : currentSchedGrade === 'g2' ? '二年級' : '三年級';
+      const cName = currentSchedCat === 'academic' ? '主要學科' : '藝能與非考科';
+      document.getElementById("scheduleTableTitle").textContent = `${gName}各科教學預定進度表 (${cName})`;
+    }
+
+    // ---------------- AUDIT & CONFLICTS RENDERING ----------------
+    function renderAuditSection() {
+      const listContainer = document.getElementById("conflictsList");
+      const conflicts = window.APP_DATA.conflicts;
+
+      listContainer.innerHTML = conflicts.map(c => {
+        const isWarning = c.severity === 'warning';
+        return `
+          <div class="p-4 rounded-xl border ${isWarning ? 'border-amber-200 bg-amber-50/40' : 'border-indigo-100 bg-indigo-50/40'}">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${isWarning ? 'bg-amber-200 text-amber-900' : 'bg-indigo-200 text-indigo-900'}">
+                  ${c.type}
+                </span>
+                <span class="font-bold text-slate-800 text-sm">${c.teacher}</span>
+              </div>
+              <span class="text-xs text-slate-500 font-medium">${c.exam}</span>
+            </div>
+            <p class="text-xs text-slate-700 leading-relaxed">${c.detail}</p>
+          </div>
+        `;
+      }).join('');
+
+      // Render Top Burden Teachers
+      const topBody = document.getElementById("topTeachersBody");
+      const top10 = [...window.APP_DATA.teachers].sort((a,b) => b.total - a.total).slice(0, 10);
+
+      topBody.innerHTML = top10.map((t, idx) => {
+        const burdenTag = t.total >= 8 ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">極重度</span>` :
+                          t.total >= 6 ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">偏重</span>` :
+                          `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">正常</span>`;
+        return `
+          <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openTeacherModalByName('${t.name}')">
+            <td class="py-2.5 px-3 font-bold ${idx < 3 ? 'text-indigo-600' : 'text-slate-400'}">#${idx + 1}</td>
+            <td class="py-2.5 px-3 font-bold text-slate-800 flex items-center gap-1.5">
+              ${t.name}
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300"></i>
+            </td>
+            <td class="py-2.5 px-3 font-medium text-blue-600">${t.setterCount}</td>
+            <td class="py-2.5 px-3 font-medium text-emerald-600">${t.reviewerCount}</td>
+            <td class="py-2.5 px-3 font-medium text-amber-600">${t.makeupCount}</td>
+            <td class="py-2.5 px-3 font-bold text-slate-900">${t.total} 次</td>
+            <td class="py-2.5 px-3">${burdenTag}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ---------------- GLOBAL SEARCH LOGIC ----------------
+    function handleGlobalSearch(val) {
+      const clearBtn = document.getElementById("clearSearchBtn");
+      if (val.trim()) {
+        clearBtn.classList.remove("hidden");
+      } else {
+        clearBtn.classList.add("hidden");
+      }
+
+      // If in other tabs, switch to roster tab to show search results
+      renderRosterTable(val);
+      renderTeacherGrid(val);
+    }
+
+    function clearSearch() {
+      const input = document.getElementById("globalSearch");
+      input.value = "";
+      document.getElementById("clearSearchBtn").classList.add("hidden");
+      renderRosterTable("");
+      renderTeacherGrid("");
+    }
+
+    function setSearchFilter(keyword) {
+      const input = document.getElementById("globalSearch");
+      input.value = keyword;
+      handleGlobalSearch(keyword);
+      switchTab('roster');
+    }
+
+    // ---------------- CSV EXPORT ----------------
+    function exportCSV() {
+      const list = window.APP_DATA.examDuties;
+      let csv = "\uFEFF科目,年級,第一次段考命題,第一次段考審校,第二次段考命題,第二次段考審校,第三次段考命題,第三次段考審校,補考命題\n";
+      
+      list.forEach(r => {
+        csv += `"${r.subject}","${r.grade}","${r.exam1_setter}","${r.exam1_reviewer}","${r.exam2_setter}","${r.exam2_reviewer}","${r.exam3_setter}","${r.exam3_reviewer}","${r.makeup_setter}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "南投國中115學年度各科評量教師輪值表.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
